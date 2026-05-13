@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Register ID</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, sans-serif;
+}
+
+body{
+    min-height:100vh;
+    overflow:hidden;
+    background:#000;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    position:relative;
+}
+
+/* BACKGROUND ANIMASI */
+.bg{
+    position:absolute;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    z-index:-1;
+}
+
+.circle{
+    position:absolute;
+    border-radius:50%;
+    background:white;
+    opacity:0.1;
+    filter:blur(20px);
+    animation:move 10s linear infinite;
+}
+
+.circle:nth-child(1){
+    width:200px;
+    height:200px;
+    left:10%;
+    top:20%;
+    animation-duration:12s;
+}
+
+.circle:nth-child(2){
+    width:300px;
+    height:300px;
+    right:10%;
+    top:50%;
+    animation-duration:15s;
+}
+
+.circle:nth-child(3){
+    width:150px;
+    height:150px;
+    left:40%;
+    bottom:10%;
+    animation-duration:9s;
+}
+
+@keyframes move{
+    0%{
+        transform:translateY(0px) scale(1);
+    }
+    50%{
+        transform:translateY(-30px) scale(1.1);
+    }
+    100%{
+        transform:translateY(0px) scale(1);
+    }
+}
+
+/* CARD */
+.container{
+    width:350px;
+    background:rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.1);
+    backdrop-filter:blur(10px);
+    padding:25px;
+    border-radius:20px;
+    box-shadow:
+    0 0 20px rgba(255,255,255,0.2),
+    0 0 40px rgba(255,255,255,0.1);
+}
+
+h1{
+    text-align:center;
+    margin-bottom:20px;
+    text-shadow:0 0 10px white;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    border:none;
+    outline:none;
+    border-radius:10px;
+    margin-bottom:15px;
+    background:#111;
+    color:white;
+    border:1px solid rgba(255,255,255,0.2);
+}
+
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:10px;
+    background:white;
+    color:black;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+button:hover{
+    transform:scale(1.03);
+    box-shadow:0 0 20px white;
+}
+
+.list{
+    margin-top:20px;
+    max-height:250px;
+    overflow:auto;
+}
+
+.user{
+    background:rgba(255,255,255,0.06);
+    padding:10px;
+    border-radius:12px;
+    margin-bottom:10px;
+    border:1px solid rgba(255,255,255,0.1);
+    animation:fade 0.4s ease;
+}
+
+@keyframes fade{
+    from{
+        opacity:0;
+        transform:translateY(10px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+.id{
+    color:#aaa;
+    margin-top:5px;
+}
+</style>
+</head>
+<body>
+
+<div class="bg">
+    <div class="circle"></div>
+    <div class="circle"></div>
+    <div class="circle"></div>
+</div>
+
+<div class="container">
+    <h1>REGISTER</h1>
+
+    <input type="text" id="name" placeholder="Masukan Nama..." />
+    <button onclick="registerUser()">DAFTAR</button>
+
+    <div class="list" id="list"></div>
+</div>
+
+<script>
+let currentID = 1;
+
+function registerUser(){
+    const nameInput = document.getElementById("name");
+    const list = document.getElementById("list");
+
+    const name = nameInput.value.trim();
+
+    if(name === ""){
+        alert("Masukan nama dulu!");
+        return;
+    }
+
+    const userDiv = document.createElement("div");
+    userDiv.className = "user";
+
+    userDiv.innerHTML = `
+        <div><strong>Name:</strong> ${name}</div>
+        <div class="id"><strong>ID:</strong> ${currentID}</div>
+    `;
+
+    list.prepend(userDiv);
+
+    currentID++;
+
+    if(currentID > 100){
+        currentID = 1;
+    }
+
+    nameInput.value = "";
+}
+</script>
+
+</body>
+</html>
