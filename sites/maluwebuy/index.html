@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Deploy - Laxxye Bot</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background: #0a0a0f;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Animasi background bintang */
+    .stars {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .star {
+      position: absolute;
+      background: #fff;
+      border-radius: 50%;
+      animation: twinkle 3s infinite alternate;
+    }
+
+    @keyframes twinkle {
+      0%   { opacity: 0.1; transform: scale(1); }
+      100% { opacity: 0.9; transform: scale(1.4); }
+    }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 24px;
+      padding: 48px 40px;
+      max-width: 480px;
+      width: 90%;
+      text-align: center;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 0 60px rgba(99,102,241,0.15);
+      animation: fadeIn 0.8s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 999px;
+      margin-bottom: 28px;
+    }
+
+    .icon-wrap {
+      width: 90px;
+      height: 90px;
+      margin: 0 auto 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #06b6d4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      animation: pulse 2s infinite;
+      box-shadow: 0 0 30px rgba(99,102,241,0.5);
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(99,102,241,0.5); }
+      50%       { transform: scale(1.06); box-shadow: 0 0 50px rgba(99,102,241,0.8); }
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    h1 span {
+      background: linear-gradient(135deg, #6366f1, #06b6d4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: rgba(255,255,255,0.5);
+      font-size: 14px;
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+
+    .status-box {
+      background: rgba(16,185,129,0.1);
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 24px;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #10b981;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #10b981;
+      animation: blink 1.2s infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.2; }
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .info-item {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .info-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.35);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .info-value {
+      font-size: 13px;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .footer-text {
+      color: rgba(255,255,255,0.25);
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .footer-text span {
+      color: #6366f1;
+      font-weight: 700;
+    }
+
+    /* Garis animasi di border card */
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 25px;
+      background: linear-gradient(135deg, #6366f1, #06b6d4, #8b5cf6, #6366f1);
+      background-size: 300% 300%;
+      animation: borderAnim 4s linear infinite;
+      z-index: -1;
+      opacity: 0.5;
+    }
+
+    @keyframes borderAnim {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Bintang-bintang -->
+  <div class="stars" id="stars"></div>
+
+  <div class="card">
+    <div class="badge">✦ Laxxye 웹봇 배포</div>
+
+    <div class="icon-wrap">✅</div>
+
+    <h1>Deploy <span>Berhasil!</span></h1>
+    <p class="subtitle">Website kamu sudah online dan bisa diakses oleh siapa saja. Bot deploy berjalan dengan sempurna.</p>
+
+    <div class="status-box">
+      <div class="status-row">
+        <div class="dot"></div>
+        Server Online · Web Bisa Diakses Publik
+      </div>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-label">Versi Bot</div>
+        <div class="info-value">6.0.0</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Status</div>
+        <div class="info-value" style="color:#10b981">✓ Aktif</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Tipe</div>
+        <div class="info-value">Public Web 🌍</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Waktu</div>
+        <div class="info-value" id="jam">--:--:--</div>
+      </div>
+    </div>
+
+    <p class="footer-text">Powered by <span>Laxxye Bot</span> · Telegram Deploy</p>
+  </div>
+
+  <script>
+    // Generate bintang
+    const container = document.getElementById('stars');
+    for (let i = 0; i < 80; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      const size = Math.random() * 2.5 + 0.5;
+      star.style.cssText = `
+        width:${size}px; height:${size}px;
+        top:${Math.random()*100}%;
+        left:${Math.random()*100}%;
+        animation-delay:${Math.random()*4}s;
+        animation-duration:${2+Math.random()*3}s;
+      `;
+      container.appendChild(star);
+    }
+
+    // Jam real-time
+    function updateTime() {
+      const now = new Date();
+      document.getElementById('jam').textContent =
+        now.toLocaleTimeString('id-ID');
+    }
+    updateTime();
+    setInterval(updateTime, 1000);
+  </script>
+</body>
+</html>
