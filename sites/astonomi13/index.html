@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NASA Eyes Clone</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    overflow:hidden;
+    background:black;
+    font-family:Arial,sans-serif;
+    color:white;
+}
+
+canvas{
+    position:fixed;
+    inset:0;
+}
+
+/* HEADER */
+
+.header{
+    position:fixed;
+    top:20px;
+    left:20px;
+    z-index:20;
+}
+
+.header h1{
+    font-size:42px;
+    letter-spacing:4px;
+    text-shadow:0 0 20px cyan;
+}
+
+.header p{
+    color:#aaa;
+    margin-top:10px;
+    max-width:350px;
+    line-height:1.7;
+}
+
+/* PANEL */
+
+.panel{
+    position:fixed;
+    right:20px;
+    top:20px;
+    width:340px;
+    height:calc(100vh - 40px);
+    overflow:auto;
+    background:rgba(0,0,0,0.55);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:25px;
+    backdrop-filter:blur(10px);
+    padding:25px;
+    z-index:20;
+}
+
+.panel h2{
+    color:cyan;
+    margin-bottom:15px;
+}
+
+.panel p{
+    color:#ddd;
+    line-height:1.8;
+    margin-bottom:15px;
+}
+
+/* PLANET BUTTON */
+
+.list{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+.item{
+    padding:14px;
+    background:rgba(255,255,255,0.05);
+    border-radius:15px;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.item:hover{
+    background:rgba(0,255,255,0.15);
+    transform:scale(1.03);
+}
+
+/* CONTROL */
+
+.controls{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:20;
+}
+
+button{
+    padding:14px 24px;
+    border:none;
+    border-radius:15px;
+    background:rgba(255,255,255,0.1);
+    color:white;
+    cursor:pointer;
+    font-size:16px;
+}
+
+button:hover{
+    background:cyan;
+    color:black;
+}
+
+</style>
+</head>
+<body>
+
+<canvas id="space"></canvas>
+
+<div class="header">
+
+    <h1>GALAXY EYES</h1>
+
+    <p>
+        Jelajahi tata surya lengkap
+        dengan planet, satelit alami,
+        orbit, dan galaxy simulation.
+    </p>
+
+</div>
+
+<div class="panel">
+
+    <h2 id="planetTitle">☀ Matahari</h2>
+
+    <p id="planetDesc">
+        Matahari adalah pusat tata surya.
+    </p>
+
+    <p>
+        <b>Satelit:</b>
+        <span id="planetMoon">
+            Tidak ada
+        </span>
+    </p>
+
+    <div class="list" id="planetList"></div>
+
+</div>
+
+<div class="controls">
+
+    <button onclick="resetCamera()">
+        Reset Camera
+    </button>
+
+</div>
+
+<script>
+
+const canvas =
+document.getElementById("space");
+
+const ctx =
+canvas.getContext("2d");
+
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+
+/* RESIZE */
+
+window.addEventListener("resize",()=>{
+
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+
+});
+
+/* CAMERA */
+
+let camX = 0;
+let camY = 0;
+let zoom = 1;
+
+let targetX = 0;
+let targetY = 0;
+let targetZoom = 1;
+
+/* STARS */
+
+const stars = [];
+
+for(let i=0;i<6000;i++){
+
+    stars.push({
+
+        x:(Math.random()-0.5)*20000,
+        y:(Math.random()-0.5)*20000,
+        size:Math.random()*2
+
+    });
+
+}
+
+/* PLANETS */
+
+const planets = [
+
+{
+name:"Merkurius",
+color:"#999",
+radius:140,
+size:6,
+speed:0.04,
+moon:"Tidak ada",
+desc:"Planet terkecil dan terdekat dari Matahari."
+},
+
+{
+name:"Venus",
+color:"#cfa76f",
+radius:220,
+size:10,
+speed:0.032,
+moon:"Tidak ada",
+desc:"Planet terpanas di tata surya."
+},
+
+{
+name:"Bumi",
+color:"deepskyblue",
+radius:320,
+size:12,
+speed:0.025,
+moon:"Bulan",
+desc:"Planet tempat kehidupan manusia."
+},
+
+{
+name:"Mars",
+color:"red",
+radius:430,
+size:9,
+speed:0.020,
+moon:"Phobos, Deimos",
+desc:"Planet merah yang memiliki gunung terbesar."
+},
+
+{
+name:"Jupiter",
+color:"#d2b48c",
+radius:580,
+size:28,
+speed:0.015,
+moon:"Io, Europa, Ganymede, Callisto",
+desc:"Planet terbesar di tata surya."
+},
+
+{
+name:"Saturnus",
+color:"#e1c16e",
+radius:760,
+size:24,
+speed:0.011,
+moon:"Titan, Enceladus",
+desc:"Planet bercincin terbesar."
+},
+
+{
+name:"Uranus",
+color:"lightblue",
+radius:940,
+size:18,
+speed:0.008,
+moon:"Titania, Ariel",
+desc:"Planet es raksasa."
+},
+
+{
+name:"Neptunus",
+color:"blue",
+radius:1150,
+size:18,
+speed:0.006,
+moon:"Triton",
+desc:"Planet paling jauh."
+}
+
+];
+
+/* PANEL */
+
+const list =
+document.getElementById("planetList");
+
+planets.forEach((planet,index)=>{
+
+    const div =
+    document.createElement("div");
+
+    div.className = "item";
+
+    div.innerHTML =
+    "🪐 " + planet.name;
+
+    div.onclick = ()=>{
+
+        focusPlanet(index);
+
+    };
+
+    list.appendChild(div);
+
+});
+
+/* FOCUS */
+
+function focusPlanet(index){
+
+    const p = planets[index];
+
+    targetX = p.worldX;
+    targetY = p.worldY;
+    targetZoom = 2.8;
+
+    document.getElementById(
+        "planetTitle"
+    ).innerHTML =
+    "🪐 " + p.name;
+
+    document.getElementById(
+        "planetDesc"
+    ).innerHTML =
+    p.desc;
+
+    document.getElementById(
+        "planetMoon"
+    ).innerHTML =
+    p.moon;
+
+}
+
+/* RESET */
+
+function resetCamera(){
+
+    targetX = 0;
+    targetY = 0;
+    targetZoom = 1;
+
+}
+
+/* CLICK PLANET */
+
+canvas.addEventListener("click",(e)=>{
+
+    const mx = e.clientX;
+    const my = e.clientY;
+
+    planets.forEach((planet,index)=>{
+
+        const dx =
+        mx - planet.screenX;
+
+        const dy =
+        my - planet.screenY;
+
+        const dist =
+        Math.sqrt(dx*dx + dy*dy);
+
+        if(dist < planet.size*zoom + 10){
+
+            focusPlanet(index);
+
+        }
+
+    });
+
+});
+
+/* DRAW */
+
+function draw(){
+
+    ctx.fillStyle =
+    "rgba(0,0,0,0.25)";
+
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    /* CAMERA SMOOTH */
+
+    camX +=
+    (targetX - camX)*0.05;
+
+    camY +=
+    (targetY - camY)*0.05;
+
+    zoom +=
+    (targetZoom - zoom)*0.05;
+
+    /* STARS */
+
+    stars.forEach((star)=>{
+
+        const sx =
+        (star.x - camX)*zoom +
+        canvas.width/2;
+
+        const sy =
+        (star.y - camY)*zoom +
+        canvas.height/2;
+
+        ctx.beginPath();
+
+        ctx.fillStyle = "white";
+
+        ctx.arc(
+            sx,
+            sy,
+            star.size,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+    });
+
+    /* SUN */
+
+    const sunX =
+    (0 - camX)*zoom +
+    canvas.width/2;
+
+    const sunY =
+    (0 - camY)*zoom +
+    canvas.height/2;
+
+    const glow =
+    ctx.createRadialGradient(
+        sunX,
+        sunY,
+        10,
+        sunX,
+        sunY,
+        140*zoom
+    );
+
+    glow.addColorStop(0,"yellow");
+    glow.addColorStop(0.3,"orange");
+    glow.addColorStop(1,"transparent");
+
+    ctx.fillStyle = glow;
+
+    ctx.beginPath();
+
+    ctx.arc(
+        sunX,
+        sunY,
+        140*zoom,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.beginPath();
+
+    ctx.fillStyle = "orange";
+
+    ctx.arc(
+        sunX,
+        sunY,
+        40*zoom,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    /* PLANETS */
+
+    planets.forEach((planet,index)=>{
+
+        const angle =
+        Date.now()*0.001*
+        planet.speed;
+
+        planet.worldX =
+        Math.cos(angle+index)*
+        planet.radius;
+
+        planet.worldY =
+        Math.sin(angle+index)*
+        planet.radius;
+
+        const px =
+        (planet.worldX - camX)*zoom +
+        canvas.width/2;
+
+        const py =
+        (planet.worldY - camY)*zoom +
+        canvas.height/2;
+
+        planet.screenX = px;
+        planet.screenY = py;
+
+        /* ORBIT */
+
+        ctx.beginPath();
+
+        ctx.strokeStyle =
+        "rgba(255,255,255,0.08)";
+
+        ctx.arc(
+            sunX,
+            sunY,
+            planet.radius*zoom,
+            0,
+            Math.PI*2
+        );
+
+        ctx.stroke();
+
+        /* PLANET */
+
+        ctx.beginPath();
+
+        ctx.fillStyle =
+        planet.color;
+
+        ctx.arc(
+            px,
+            py,
+            planet.size*zoom,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+        /* SATURN RING */
+
+        if(planet.name === "Saturnus"){
+
+            ctx.beginPath();
+
+            ctx.strokeStyle =
+            "#d6c28a";
+
+            ctx.ellipse(
+                px,
+                py,
+                35*zoom,
+                12*zoom,
+                0,
+                0,
+                Math.PI*2
+            );
+
+            ctx.stroke();
+
+        }
+
+    });
+
+    requestAnimationFrame(draw);
+
+}
+
+draw();
+
+</script>
+
+</body>
+</html>
