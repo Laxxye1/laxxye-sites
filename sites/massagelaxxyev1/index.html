@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatApp - Chat pakai ID</title>
+
+    <!-- GUN.js untuk real-time chat tanpa server -->
+    <script src="https://cdn.jsdelivr.net/npm/gun@0.2020.1237/gun.min.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/gun@0.2020.1237/sea.min.js">
+    </script>
+
+    <style>
+        :root {
+            --bg: #0f0f0f;
+            --surface: #1a1a1a;
+            --surface2: #242424;
+            --primary: #6c5ce7;
+            --primary-light: #a29bfe;
+            --accent: #00cec9;
+            --text: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --danger: #e74c3c;
+            --bubble-self: #6c5ce7;
+            --bubble-other: #2d2d2d;
+            --border: #333;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            --transition: 0.25s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ========== CONTAINER UTAMA ========== */
+        #app {
+            width: 100%;
+            max-width: 500px;
+            height: 100vh;
+            max-height: 850px;
+            background: var(--surface);
+            border-radius: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+        @media (min-width: 520px) {
+            #app {
+                border-radius: 20px;
+                height: 92vh;
+                max-height: 800px;
+            }
+        }
+
+        /* ========== HEADER ========== */
+        #header {
+            background: var(--surface2);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            z-index: 10;
+        }
+        #user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+        #user-info .name-row {
+            font-weight: 700;
+            font-size: 15px;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        #user-info .name-row .dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #2ecc71;
+            flex-shrink: 0;
+            animation: pulse-dot 2s infinite;
+        }
+        @keyframes pulse-dot {
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.6);
+            }
+            50% {
+                box-shadow: 0 0 0 8px rgba(46, 204, 113, 0);
+            }
+        }
+        #user-info .id-row {
+            font-size: 11px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+            padding: 3px 6px;
+            border-radius: 6px;
+            background: transparent;
+            border: none;
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            letter-spacing: 0.5px;
+        }
+        #user-info .id-row:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+        #user-info .id-row .copy-icon {
+            font-size: 12px;
+            opacity: 0;
+            transition: var(--transition);
+        }
+        #user-info .id-row:hover .copy-icon {
+            opacity: 1;
+        }
+        .header-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        #copy-toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 8px 25px rgba(108, 92, 231, 0.5);
+        }
+        #copy-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+        /* ========== KONEKSI / INPUT ID TEMAN ========== */
+        #connection-bar {
+            display: flex;
+            gap: 8px;
+            padding: 10px 14px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            align-items: center;
+        }
+        #connection-bar input {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 25px;
+            border: 2px solid var(--border);
+            background: var(--surface2);
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+            transition: var(--transition);
+            min-width: 0;
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            letter-spacing: 0.5px;
+        }
+        #connection-bar input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.15);
+        }
+        #connection-bar input::placeholder {
+            color: #666;
+            letter-spacing: 0;
+            font-family: 'Segoe UI', 'Inter', sans-serif;
+        }
+        #connection-bar button {
+            padding: 10px 18px;
+            border-radius: 25px;
+            border: none;
+            background: var(--primary);
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 13px;
+            transition: var(--transition);
+            white-space: nowrap;
+            letter-spacing: 0.3px;
+        }
+        #connection-bar button:hover {
+            background: #7d6ff0;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+        }
+        #connection-bar button:active {
+            transform: scale(0.95);
+            transition: 0.1s;
+        }
+        #connection-bar button.disconnect {
+            background: transparent;
+            border: 2px solid var(--danger);
+            color: var(--danger);
+            padding: 8px 14px;
+            font-size: 12px;
+        }
+        #connection-bar button.disconnect:hover {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        /* ========== AREA CHAT ========== */
+        #chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+        }
+        #chat-header {
+            padding: 10px 16px;
+            background: var(--surface2);
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            font-style: italic;
+            transition: var(--transition);
+        }
+        #chat-header.active {
+            color: #fff;
+            font-style: normal;
+            font-weight: 600;
+            font-size: 14px;
+            background: #1e1e2e;
+        }
+        #chat-header .connected-name {
+            color: var(--accent);
+            font-weight: 700;
+        }
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            scroll-behavior: smooth;
+        }
+        #messages::-webkit-scrollbar {
+            width: 5px;
+        }
+        #messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #messages::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 10px;
+        }
+        #messages .empty-state {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #555;
+            font-size: 14px;
+            text-align: center;
+            padding: 30px;
+            line-height: 1.6;
+        }
+        #messages .empty-state .icon {
+            font-size: 50px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        /* ========== BUBBLE CHAT ========== */
+        .msg-bubble {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.5;
+            word-break: break-word;
+            position: relative;
+            animation: fadeInUp 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .msg-bubble.self {
+            align-self: flex-end;
+            background: var(--bubble-self);
+            color: #fff;
+            border-bottom-right-radius: 4px;
+            margin-left: auto;
+        }
+        .msg-bubble.other {
+            align-self: flex-start;
+            background: var(--bubble-other);
+            color: #e0e0e0;
+            border-bottom-left-radius: 4px;
+        }
+        .msg-bubble .sender-name {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 3px;
+            opacity: 0.8;
+        }
+        .msg-bubble .time {
+            font-size: 10px;
+            opacity: 0.6;
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        /* ========== INPUT PESAN ========== */
+        #input-area {
+            display: flex;
+            gap: 8px;
+            padding: 10px 14px;
+            background: var(--surface2);
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+            align-items: center;
+        }
+        #input-area input {
+            flex: 1;
+            padding: 11px 16px;
+            border-radius: 25px;
+            border: 2px solid var(--border);
+            background: var(--surface);
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: var(--transition);
+            min-width: 0;
+        }
+        #input-area input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.15);
+        }
+        #input-area input::placeholder {
+            color: #555;
+        }
+        #input-area button {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: var(--primary);
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #input-area button:hover {
+            background: #7d6ff0;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.5);
+        }
+        #input-area button:active {
+            transform: scale(0.9);
+            transition: 0.1s;
+        }
+        #input-area button:disabled {
+            background: #444;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* ========== MODAL REGISTER ========== */
+        #register-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+        #register-modal {
+            background: var(--surface2);
+            padding: 30px 24px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 380px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            animation: popIn 0.35s ease;
+        }
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.85) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        #register-modal h2 {
+            margin-bottom: 6px;
+            font-size: 22px;
+            color: #fff;
+        }
+        #register-modal .subtitle {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        #register-modal input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 25px;
+            border: 2px solid var(--border);
+            background: var(--surface);
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            text-align: center;
+            transition: var(--transition);
+            margin-bottom: 16px;
+        }
+        #register-modal input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.15);
+        }
+        #register-modal button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 25px;
+            border: none;
+            background: var(--primary);
+            color: #fff;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: var(--transition);
+            letter-spacing: 0.5px;
+        }
+        #register-modal button:hover {
+            background: #7d6ff0;
+            box-shadow: 0 6px 20px rgba(108, 92, 231, 0.5);
+            transform: translateY(-2px);
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 400px) {
+            #header {
+                padding: 10px 12px;
+            }
+            #user-info .name-row {
+                font-size: 13px;
+            }
+            #user-info .id-row {
+                font-size: 10px;
+            }
+            #connection-bar {
+                padding: 8px 10px;
+                gap: 6px;
+            }
+            #connection-bar input {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+            #connection-bar button {
+                padding: 8px 14px;
+                font-size: 11px;
+            }
+            #input-area {
+                padding: 8px 10px;
+                gap: 6px;
+            }
+            #input-area input {
+                padding: 10px 14px;
+                font-size: 13px;
+            }
+            #messages {
+                padding: 8px 6px;
+            }
+            .msg-bubble {
+                max-width: 85%;
+                font-size: 13px;
+                padding: 8px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Toast notifikasi copy -->
+    <div id="copy-toast">📋 ID berhasil disalin!</div>
+
+    <!-- APLIKASI UTAMA -->
+    <div id="app">
+        <!-- HEADER: Name & ID di pojok kiri atas -->
+        <div id="header">
+            <div id="user-info">
+                <div class="name-row">
+                    <span class="dot"></span>
+                    <span>Name: <strong id="display-name">-</strong></span>
+                </div>
+                <button class="id-row" id="id-display-btn" title="Klik untuk menyalin ID">
+                    ID: <span id="display-id">-</span>
+                    <span class="copy-icon">📋</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- BAR KONEKSI: Masukkan ID teman -->
+        <div id="connection-bar">
+            <input type="text" id="target-id-input" placeholder="Masukkan ID teman..." maxlength="20" autocomplete="off">
+            <button id="connect-btn">🔗 Hubungkan</button>
+            <button id="disconnect-btn" class="disconnect" style="display:none;">Putus</button>
+        </div>
+
+        <!-- AREA CHAT -->
+        <div id="chat-area">
+            <div id="chat-header">👋 Masukkan ID teman untuk mulai chat</div>
+            <div id="messages">
+                <div class="empty-state">
+                    <span>
+                        <span class="icon">💬</span>
+                        Chat akan muncul di sini.<br>Hubungkan dengan ID teman untuk mulai!
+                    </span>
+                </div>
+            </div>
+            <div id="input-area">
+                <input type="text" id="message-input" placeholder="Ketik pesan..." disabled>
+                <button id="send-btn" disabled>➤</button>
+            </div>
+        </div>
+
+        <!-- MODAL REGISTER (tampil jika belum punya akun) -->
+        <div id="register-overlay">
+            <div id="register-modal">
+                <h2>📝 Daftar Dulu Yuk!</h2>
+                <p class="subtitle">Masukkan nama kamu.<br>Nanti kamu dapat <b>ID unik</b> yang bisa dibagikan ke teman.</p>
+                <input type="text" id="register-name-input" placeholder="Nama kamu..." maxlength="25" autocomplete="off">
+                <button id="register-btn">✨ Daftar & Dapatkan ID</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ==================== KONFIGURASI ====================
+            const APP_NAME = 'chatApp_v2';
+            const STORAGE_KEY_ID = 'chatApp_myId';
+            const STORAGE_KEY_NAME = 'chatApp_myName';
+
+            // Inisialisasi GUN.js (database terdesentralisasi)
+            const gun = Gun({
+                peers: [
+                    'https://gun-manhattan.herokuapp.com/gun',
+                    'https://peer.wallie.io/gun',
+                ],
+                localStorage: true,
+                radisk: true,
+            });
+
+            // ==================== ELEMEN DOM ====================
+            const $displayName = document.getElementById('display-name');
+            const $displayId = document.getElementById('display-id');
+            const $idDisplayBtn = document.getElementById('id-display-btn');
+            const $copyToast = document.getElementById('copy-toast');
+            const $targetIdInput = document.getElementById('target-id-input');
+            const $connectBtn = document.getElementById('connect-btn');
+            const $disconnectBtn = document.getElementById('disconnect-btn');
+            const $chatHeader = document.getElementById('chat-header');
+            const $messages = document.getElementById('messages');
+            const $messageInput = document.getElementById('message-input');
+            const $sendBtn = document.getElementById('send-btn');
+            const $registerOverlay = document.getElementById('register-overlay');
+            const $registerNameInput = document.getElementById('register-name-input');
+            const $registerBtn = document.getElementById('register-btn');
+
+            // ==================== STATE ==================
+            let myId = null;
+            let myName = null;
+            let connectedTargetId = null; // ID teman yang sedang terhubung
+            let currentRoomId = null;
+            const displayedMessageIds = new Set(); // Hindari duplikat pesan
+            let gunRoomSubscription = null; // Untuk unsubscribe
+
+            // ==================== FUNGSI UTILITY ====================
+            function generateId() {
+                // ID 8 karakter: timestamp base36 + random
+                const ts = Date.now().toString(36).slice(-5);
+                const rand = Math.random().toString(36).substring(2, 5);
+                return (ts + rand).toLowerCase();
+            }
+
+            function getRoomId(idA, idB) {
+                // Urutkan biar room ID konsisten
+                return [idA, idB].sort().join('_');
+            }
+
+            function formatTime(timestamp) {
+                const d = new Date(timestamp);
+                const hours = d.getHours().toString().padStart(2, '0');
+                const minutes = d.getMinutes().toString().padStart(2, '0');
+                return `${hours}:${minutes}`;
+            }
+
+            function showToast(text) {
+                $copyToast.textContent = text;
+                $copyToast.classList.add('show');
+                clearTimeout($copyToast._timeout);
+                $copyToast._timeout = setTimeout(() => {
+                    $copyToast.classList.remove('show');
+                }, 1800);
+            }
+
+            async function copyToClipboard(text) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    showToast('📋 ID berhasil disalin!');
+                } catch {
+                    // Fallback
+                    const ta = document.createElement('textarea');
+                    ta.value = text;
+                    ta.style.position = 'fixed';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    showToast('📋 ID berhasil disalin!');
+                }
+            }
+
+            // ==================== FUNGSI REGISTER ====================
+            function showRegisterModal() {
+                $registerOverlay.style.display = 'flex';
+                $registerNameInput.focus();
+            }
+
+            function hideRegisterModal() {
+                $registerOverlay.style.display = 'none';
+            }
+
+            function registerUser(name) {
+                const id = generateId();
+                const trimmedName = name.trim();
+
+                // Simpan ke localStorage
+                localStorage.setItem(STORAGE_KEY_ID, id);
+                localStorage.setItem(STORAGE_KEY_NAME, trimmedName);
+
+                // Simpan ke GUN (agar user lain bisa lihat nama kita)
+                gun.get(APP_NAME).get('users').get(id).put({
+                    id: id,
+                    name: trimmedName,
+                    createdAt: Date.now(),
+                });
+
+                // Update state
+                myId = id;
+                myName = trimmedName;
+                updateHeaderDisplay();
+                hideRegisterModal();
+                enableChatUI();
+                console.log('✅ User terdaftar:', { id, name: trimmedName });
+            }
+
+            function loadUserFromStorage() {
+                const savedId = localStorage.getItem(STORAGE_KEY_ID);
+                const savedName = localStorage.getItem(STORAGE_KEY_NAME);
+                if (savedId && savedName) {
+                    myId = savedId;
+                    myName = savedName;
+                    // Update GUN (refresh data)
+                    gun.get(APP_NAME).get('users').get(myId).put({
+                        id: myId,
+                        name: myName,
+                        lastSeen: Date.now(),
+                    });
+                    updateHeaderDisplay();
+                    hideRegisterModal();
+                    enableChatUI();
+                    console.log('👤 User dimuat dari storage:', { id: myId, name: myName });
+                    return true;
+                }
+                return false;
+            }
+
+            function updateHeaderDisplay() {
+                $displayName.textContent = myName || '-';
+                $displayId.textContent = myId || '-';
+            }
+
+            function enableChatUI() {
+                $targetIdInput.disabled = false;
+                $connectBtn.disabled = false;
+                $targetIdInput.placeholder = 'Masukkan ID teman...';
+            }
+
+            // ==================== FUNGSI CHAT ====================
+            function connectToUser(targetId) {
+                if (!targetId || targetId === myId) {
+                    if (targetId === myId) {
+                        showToast('⚠️ Tidak bisa chat dengan diri sendiri');
+                    }
+                    return;
+                }
+
+                // Jika sudah terhubung ke user yang sama, abaikan
+                if (connectedTargetId === targetId) return;
+
+                // Disconnect dulu dari room sebelumnya
+                disconnectFromRoom();
+
+                // Cari nama target dari GUN
+                gun.get(APP_NAME).get('users').get(targetId).once((data) => {
+                    const targetName = (data && data.name) ? data.name : targetId;
+
+                    // Set state koneksi
+                    connectedTargetId = targetId;
+                    currentRoomId = getRoomId(myId, targetId);
+                    $targetIdInput.value = targetId;
+
+                    // Update UI
+                    $chatHeader.classList.add('active');
+                    $chatHeader.innerHTML =
+                        `💬 Chat dengan: <span class="connected-name">${escapeHTML(targetName)}</span> (ID: ${escapeHTML(targetId)})`;
+                    $connectBtn.style.display = 'none';
+                    $disconnectBtn.style.display = 'inline-block';
+                    $messageInput.disabled = false;
+                    $sendBtn.disabled = false;
+                    $messageInput.placeholder = 'Ketik pesan...';
+                    $messageInput.focus();
+
+                    // Bersihkan area chat & set
+                    $messages.innerHTML = '';
+                    displayedMessageIds.clear();
+
+                    // Subscribe ke room
+                    subscribeToRoom(currentRoomId);
+
+                    console.log('🔗 Terhubung ke:', { targetId, targetName, roomId: currentRoomId });
+                });
+            }
+
+            function disconnectFromRoom() {
+                // Unsubscribe dari room sebelumnya
+                if (gunRoomSubscription && currentRoomId) {
+                    gun.get(APP_NAME).get('rooms').get(currentRoomId).map().off();
+                    gunRoomSubscription = null;
+                }
+
+                connectedTargetId = null;
+                currentRoomId = null;
+                $targetIdInput.value = '';
+                $chatHeader.classList.remove('active');
+                $chatHeader.innerHTML = '👋 Masukkan ID teman untuk mulai chat';
+                $connectBtn.style.display = 'inline-block';
+                $disconnectBtn.style.display = 'none';
+                $messageInput.disabled = true;
+                $sendBtn.disabled = true;
+                $messageInput.placeholder = 'Hubungkan dulu dengan teman...';
+                $messages.innerHTML = `
+                    <div class="empty-state">
+                        <span>
+                            <span class="icon">💬</span>
+                            Chat akan muncul di sini.<br>Hubungkan dengan ID teman untuk mulai!
+                        </span>
+                    </div>`;
+                displayedMessageIds.clear();
+            }
+
+            function subscribeToRoom(roomId) {
+                // Unsubscribe dulu kalau ada
+                if (gunRoomSubscription) {
+                    gun.get(APP_NAME).get('rooms').get(currentRoomId).map().off();
+                }
+
+                gunRoomSubscription = gun.get(APP_NAME).get('rooms').get(roomId).map().on((data, key) => {
+                    // Validasi data pesan
+                    if (!data || typeof data !== 'object' || !data.msgId || !data.text || key === '_') {
+                        return;
+                    }
+
+                    // Cek duplikat
+                    if (displayedMessageIds.has(data.msgId)) return;
+                    displayedMessageIds.add(data.msgId);
+
+                    // Render pesan
+                    const isSelf = data.from === myId;
+                    appendMessageToUI({
+                        msgId: data.msgId,
+                        from: data.from,
+                        fromName: data.fromName || data.from,
+                        text: data.text,
+                        time: data.time || Date.now(),
+                        isSelf: isSelf,
+                    });
+                });
+
+                console.log('📡 Subscribe ke room:', roomId);
+            }
+
+            function appendMessageToUI(msg) {
+                // Hapus empty state jika ada
+                const emptyState = $messages.querySelector('.empty-state');
+                if (emptyState) emptyState.remove();
+
+                const bubble = document.createElement('div');
+                bubble.className = `msg-bubble ${msg.isSelf ? 'self' : 'other'}`;
+                bubble.setAttribute('data-msgid', msg.msgId);
+
+                bubble.innerHTML = `
+                    ${!msg.isSelf ? `<div class="sender-name">${escapeHTML(msg.fromName)}</div>` : ''}
+                    <div class="text">${escapeHTML(msg.text)}</div>
+                    <div class="time">${formatTime(msg.time)}</div>
+                `;
+
+                $messages.appendChild(bubble);
+                scrollToBottom();
+            }
+
+            function scrollToBottom() {
+                requestAnimationFrame(() => {
+                    $messages.scrollTop = $messages.scrollHeight;
+                });
+            }
+
+            function sendMessage() {
+                const text = $messageInput.value.trim();
+                if (!text || !currentRoomId || !connectedTargetId) return;
+
+                const msgId = Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+
+                const messageData = {
+                    msgId: msgId,
+                    from: myId,
+                    fromName: myName,
+                    text: text,
+                    time: Date.now(),
+                };
+
+                // Kirim ke GUN
+                gun.get(APP_NAME).get('rooms').get(currentRoomId).set(messageData);
+
+                // Tampilkan di UI sendiri (optimistic render)
+                appendMessageToUI({
+                    ...messageData,
+                    isSelf: true,
+                });
+                displayedMessageIds.add(msgId);
+
+                // Reset input
+                $messageInput.value = '';
+                $messageInput.focus();
+
+                console.log('📤 Pesan terkirim:', { roomId: currentRoomId, text });
+            }
+
+            function escapeHTML(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            // ==================== EVENT LISTENERS ====================
+            // Copy ID saat klik display ID
+            $idDisplayBtn.addEventListener('click', () => {
+                if (myId) copyToClipboard(myId);
+            });
+
+            // Register
+            $registerBtn.addEventListener('click', () => {
+                const name = $registerNameInput.value.trim();
+                if (!name) {
+                    showToast('⚠️ Masukkan nama dulu ya!');
+                    $registerNameInput.focus();
+                    return;
+                }
+                if (name.length < 2) {
+                    showToast('⚠️ Nama minimal 2 karakter');
+                    return;
+                }
+                registerUser(name);
+            });
+            $registerNameInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') $registerBtn.click();
+            });
+
+            // Connect
+            $connectBtn.addEventListener('click', () => {
+                const targetId = $targetIdInput.value.trim().toLowerCase();
+                if (!targetId) {
+                    showToast('⚠️ Masukkan ID teman dulu!');
+                    return;
+                }
+                connectToUser(targetId);
+            });
+            $targetIdInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') $connectBtn.click();
+            });
+
+            // Disconnect
+            $disconnectBtn.addEventListener('click', () => {
+                disconnectFromRoom();
+            });
+
+            // Kirim pesan
+            $sendBtn.addEventListener('click', sendMessage);
+            $messageInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // ==================== INISIALISASI ====================
+            function init() {
+                const loaded = loadUserFromStorage();
+                if (!loaded) {
+                    // User baru, tampilkan modal register
+                    showRegisterModal();
+                    $registerNameInput.focus();
+                    // Disable chat UI
+                    $targetIdInput.disabled = true;
+                    $connectBtn.disabled = true;
+                    $messageInput.disabled = true;
+                    $sendBtn.disabled = true;
+                } else {
+                    // User sudah terdaftar
+                    updateHeaderDisplay();
+                    hideRegisterModal();
+                    enableChatUI();
+                }
+            }
+
+            // Jalankan!
+            init();
+
+            // ==================== LOGGING ====================
+            console.log('🚀 ChatApp siap!');
+            console.log('📌 Cara pakai:');
+            console.log('  1. Daftar dengan nama kamu → dapat ID');
+            console.log('  2. Share ID ke teman (klik ID di pojok kiri atas untuk copy)');
+            console.log('  3. Masukkan ID teman di input, klik Hubungkan');
+            console.log('  4. Mulai chat! 💬');
+            console.log('🌐 Buka 2 tab browser berbeda untuk mencoba simulasi chat');
+            if (myId) console.log('👤 ID kamu:', myId, '| Nama:', myName);
+
+        })();
+    </script>
+</body>
+</html>
