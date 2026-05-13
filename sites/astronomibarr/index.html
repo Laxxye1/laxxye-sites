@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Web Astronomi</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, sans-serif;
+}
+
+body{
+    overflow-x:hidden;
+    background:black;
+    color:white;
+}
+
+/* Background bintang */
+.space{
+    position:fixed;
+    width:100%;
+    height:100%;
+    background:
+    radial-gradient(white 1px, transparent 1px);
+    background-size:50px 50px;
+    animation:starsMove 60s linear infinite;
+    z-index:-2;
+}
+
+@keyframes starsMove{
+    from{transform:translateY(0);}
+    to{transform:translateY(1000px);}
+}
+
+/* Judul */
+.title{
+    text-align:center;
+    padding-top:40px;
+    font-size:55px;
+    font-weight:bold;
+    letter-spacing:4px;
+    animation:glow 2s infinite alternate;
+}
+
+@keyframes glow{
+    from{
+        text-shadow:0 0 10px white;
+    }
+    to{
+        text-shadow:0 0 30px cyan;
+    }
+}
+
+/* Tata Surya */
+.solar-system{
+    position:relative;
+    width:100%;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+/* Matahari */
+.sun{
+    position:absolute;
+    width:120px;
+    height:120px;
+    background:radial-gradient(circle, yellow, orange, red);
+    border-radius:50%;
+    box-shadow:0 0 50px orange;
+    z-index:10;
+}
+
+/* Orbit */
+.orbit{
+    position:absolute;
+    border:1px solid rgba(255,255,255,0.2);
+    border-radius:50%;
+    animation:rotate linear infinite;
+}
+
+@keyframes rotate{
+    from{transform:rotate(0deg);}
+    to{transform:rotate(360deg);}
+}
+
+/* Planet */
+.planet{
+    position:absolute;
+    top:50%;
+    left:100%;
+    transform:translate(-50%, -50%);
+    border-radius:50%;
+}
+
+/* Planet warna */
+.mercury{width:12px;height:12px;background:gray;}
+.venus{width:18px;height:18px;background:#d9a066;}
+.earth{width:20px;height:20px;background:deepskyblue;}
+.mars{width:16px;height:16px;background:red;}
+.jupiter{width:40px;height:40px;background:#d8b384;}
+.saturn{width:35px;height:35px;background:#e5d28c;}
+.uranus{width:28px;height:28px;background:lightblue;}
+.neptune{width:26px;height:26px;background:blue;}
+
+/* Orbit ukuran */
+.mercury-orbit{
+    width:180px;
+    height:180px;
+    animation-duration:5s;
+}
+
+.venus-orbit{
+    width:250px;
+    height:250px;
+    animation-duration:8s;
+}
+
+.earth-orbit{
+    width:330px;
+    height:330px;
+    animation-duration:10s;
+}
+
+.mars-orbit{
+    width:420px;
+    height:420px;
+    animation-duration:14s;
+}
+
+.jupiter-orbit{
+    width:550px;
+    height:550px;
+    animation-duration:20s;
+}
+
+.saturn-orbit{
+    width:700px;
+    height:700px;
+    animation-duration:25s;
+}
+
+.uranus-orbit{
+    width:850px;
+    height:850px;
+    animation-duration:32s;
+}
+
+.neptune-orbit{
+    width:1000px;
+    height:1000px;
+    animation-duration:40s;
+}
+
+/* Saturn ring */
+.saturn::after{
+    content:'';
+    position:absolute;
+    width:50px;
+    height:10px;
+    border:2px solid #c2b280;
+    border-radius:50%;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%) rotate(20deg);
+}
+
+/* Info */
+.info{
+    text-align:center;
+    padding:40px;
+    line-height:1.8;
+    font-size:18px;
+}
+
+.info h2{
+    margin-bottom:20px;
+    color:cyan;
+}
+
+footer{
+    text-align:center;
+    padding:20px;
+    color:gray;
+}
+</style>
+</head>
+<body>
+
+<div class="space"></div>
+
+<h1 class="title">🌌 WEB ASTRONOMI 🌌</h1>
+
+<section class="solar-system">
+
+    <div class="sun"></div>
+
+    <div class="orbit mercury-orbit">
+        <div class="planet mercury"></div>
+    </div>
+
+    <div class="orbit venus-orbit">
+        <div class="planet venus"></div>
+    </div>
+
+    <div class="orbit earth-orbit">
+        <div class="planet earth"></div>
+    </div>
+
+    <div class="orbit mars-orbit">
+        <div class="planet mars"></div>
+    </div>
+
+    <div class="orbit jupiter-orbit">
+        <div class="planet jupiter"></div>
+    </div>
+
+    <div class="orbit saturn-orbit">
+        <div class="planet saturn"></div>
+    </div>
+
+    <div class="orbit uranus-orbit">
+        <div class="planet uranus"></div>
+    </div>
+
+    <div class="orbit neptune-orbit">
+        <div class="planet neptune"></div>
+    </div>
+
+</section>
+
+<section class="info">
+    <h2>✨ Tentang Tata Surya</h2>
+    <p>
+        Tata surya adalah kumpulan planet yang mengelilingi Matahari.
+        Planet terdiri dari Merkurius, Venus, Bumi, Mars,
+        Jupiter, Saturnus, Uranus, dan Neptunus.
+    </p>
+
+    <p>
+        Astronomi adalah ilmu yang mempelajari benda langit
+        seperti planet, bintang, galaksi, dan alam semesta.
+    </p>
+</section>
+
+<footer>
+    Dibuat Dengan HTML + CSS Animasi 🚀
+</footer>
+
+</body>
+</html>
