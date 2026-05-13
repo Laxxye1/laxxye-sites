@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clas VIIB</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    overflow:hidden;
+    background:black;
+    color:white;
+    height:100vh;
+}
+
+/* BACKGROUND HITAM PUTIH */
+.bg{
+    position:fixed;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    z-index:-1;
+}
+
+.glow{
+    position:absolute;
+    border-radius:50%;
+    background:white;
+    opacity:0.08;
+    filter:blur(40px);
+    animation:float 10s infinite ease-in-out;
+}
+
+.glow:nth-child(1){
+    width:250px;
+    height:250px;
+    top:10%;
+    left:5%;
+}
+
+.glow:nth-child(2){
+    width:350px;
+    height:350px;
+    top:40%;
+    right:5%;
+    animation-duration:14s;
+}
+
+.glow:nth-child(3){
+    width:180px;
+    height:180px;
+    bottom:10%;
+    left:40%;
+    animation-duration:8s;
+}
+
+@keyframes float{
+    0%{
+        transform:translateY(0px) scale(1);
+    }
+    50%{
+        transform:translateY(-40px) scale(1.1);
+    }
+    100%{
+        transform:translateY(0px) scale(1);
+    }
+}
+
+/* REGISTER */
+.register-page{
+    width:100%;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.card{
+    width:350px;
+    padding:25px;
+    border-radius:20px;
+    background:rgba(255,255,255,0.05);
+    backdrop-filter:blur(10px);
+    border:1px solid rgba(255,255,255,0.1);
+    box-shadow:
+    0 0 20px rgba(255,255,255,0.15),
+    0 0 40px rgba(255,255,255,0.08);
+    animation:cardGlow 3s infinite alternate;
+}
+
+@keyframes cardGlow{
+    from{
+        box-shadow:
+        0 0 20px rgba(255,255,255,0.15),
+        0 0 40px rgba(255,255,255,0.08);
+    }
+    to{
+        box-shadow:
+        0 0 35px rgba(255,255,255,0.35),
+        0 0 70px rgba(255,255,255,0.15);
+    }
+}
+
+h1{
+    text-align:center;
+    margin-bottom:20px;
+    font-size:32px;
+    text-shadow:0 0 10px white;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    margin-bottom:15px;
+    border:none;
+    outline:none;
+    border-radius:10px;
+    background:#111;
+    color:white;
+    border:1px solid rgba(255,255,255,0.1);
+}
+
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:10px;
+    background:white;
+    color:black;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+button:hover{
+    transform:scale(1.03);
+    box-shadow:0 0 20px white;
+}
+
+/* LIST */
+.list{
+    margin-top:20px;
+    max-height:150px;
+    overflow:auto;
+}
+
+.user{
+    padding:10px;
+    border-radius:12px;
+    margin-bottom:10px;
+    background:rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.1);
+    animation:fadeUp 0.5s ease;
+}
+
+@keyframes fadeUp{
+    from{
+        opacity:0;
+        transform:translateY(10px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+/* HALAMAN WELCOME */
+.welcome-page{
+    display:none;
+    width:100%;
+    height:100vh;
+    position:relative;
+}
+
+.text-box{
+    position:absolute;
+    top:20px;
+    left:20px;
+}
+
+.big-text{
+    font-size:45px;
+    font-weight:bold;
+    text-shadow:
+    0 0 10px white,
+    0 0 20px white;
+    white-space:nowrap;
+    overflow:hidden;
+    border-right:3px solid white;
+    width:0;
+    animation:
+    typing 4s steps(30,end) forwards,
+    blink 0.8s infinite;
+}
+
+.name-text{
+    margin-top:15px;
+    font-size:25px;
+    opacity:0;
+    animation:showName 2s forwards;
+    animation-delay:4s;
+    text-shadow:0 0 10px white;
+}
+
+@keyframes typing{
+    from{
+        width:0;
+    }
+    to{
+        width:100%;
+    }
+}
+
+@keyframes blink{
+    50%{
+        border-color:transparent;
+    }
+}
+
+@keyframes showName{
+    to{
+        opacity:1;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="bg">
+    <div class="glow"></div>
+    <div class="glow"></div>
+    <div class="glow"></div>
+</div>
+
+<!-- REGISTER -->
+<div class="register-page" id="registerPage">
+
+    <div class="card">
+        <h1>REGISTER</h1>
+
+        <input type="text" id="nameInput" placeholder="Masukan Nama...">
+
+        <button onclick="registerUser()">DAFTAR</button>
+
+        <div class="list" id="list"></div>
+    </div>
+
+</div>
+
+<!-- WELCOME -->
+<div class="welcome-page" id="welcomePage">
+
+    <div class="text-box">
+        <div class="big-text">
+            Wellcome To Web Clas VIIB
+        </div>
+
+        <div class="name-text" id="showName">
+            Name:
+        </div>
+    </div>
+
+</div>
+
+<script>
+let currentID = 1;
+
+function registerUser(){
+
+    const input = document.getElementById("nameInput");
+    const name = input.value.trim();
+
+    if(name === ""){
+        alert("Masukan nama!");
+        return;
+    }
+
+    // TAMBAH LIST
+    const list = document.getElementById("list");
+
+    const user = document.createElement("div");
+    user.className = "user";
+
+    user.innerHTML = `
+        <b>Name:</b> ${name}<br>
+        <b>ID:</b> ${currentID}
+    `;
+
+    list.prepend(user);
+
+    currentID++;
+
+    // GANTI HALAMAN
+    setTimeout(() => {
+
+        document.getElementById("registerPage").style.display = "none";
+        document.getElementById("welcomePage").style.display = "block";
+
+        document.getElementById("showName").innerHTML =
+        "Name: " + name;
+
+    }, 1000);
+
+}
+</script>
+
+</body>
+</html>
