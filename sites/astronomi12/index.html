@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galaxy Planet Explorer</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    overflow:hidden;
+    background:black;
+    font-family:Arial,sans-serif;
+}
+
+/* CANVAS */
+
+canvas{
+    position:fixed;
+    width:100%;
+    height:100%;
+    top:0;
+    left:0;
+}
+
+/* UI */
+
+.top{
+    position:fixed;
+    top:20px;
+    left:20px;
+    z-index:10;
+    color:white;
+}
+
+.top h1{
+    font-size:38px;
+    letter-spacing:4px;
+    text-shadow:0 0 20px cyan;
+}
+
+.top p{
+    margin-top:10px;
+    color:#aaa;
+    max-width:300px;
+    line-height:1.6;
+}
+
+/* PLANET INFO */
+
+.panel{
+    position:fixed;
+    right:20px;
+    top:50%;
+    transform:translateY(-50%);
+    width:320px;
+    background:rgba(0,0,0,0.55);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:25px;
+    padding:25px;
+    backdrop-filter:blur(10px);
+    color:white;
+    z-index:20;
+}
+
+.panel h2{
+    color:cyan;
+    margin-bottom:15px;
+}
+
+.panel p{
+    color:#ddd;
+    line-height:1.8;
+    font-size:15px;
+}
+
+/* CONTROL */
+
+.controls{
+    position:fixed;
+    bottom:25px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:20;
+    display:flex;
+    gap:15px;
+}
+
+button{
+    padding:12px 20px;
+    border:none;
+    border-radius:15px;
+    background:rgba(255,255,255,0.1);
+    color:white;
+    cursor:pointer;
+    backdrop-filter:blur(10px);
+    transition:0.3s;
+}
+
+button:hover{
+    background:cyan;
+    color:black;
+}
+
+/* MOBILE */
+
+@media(max-width:800px){
+
+    .panel{
+        width:90%;
+        right:5%;
+        top:auto;
+        bottom:90px;
+        transform:none;
+    }
+
+    .top h1{
+        font-size:28px;
+    }
+
+}
+
+</style>
+</head>
+<body>
+
+<canvas id="space"></canvas>
+
+<div class="top">
+    <h1>GALAXY EXPLORER</h1>
+    <p>
+        Klik planet untuk zoom
+        dan melihat informasi.
+    </p>
+</div>
+
+<div class="panel">
+
+    <h2 id="planetName">☀ Matahari</h2>
+
+    <p id="planetInfo">
+        Matahari adalah pusat tata surya.
+        Semua planet mengelilingi Matahari
+        karena gaya gravitasi.
+    </p>
+
+</div>
+
+<div class="controls">
+
+    <button onclick="resetView()">
+        Reset View
+    </button>
+
+</div>
+
+<script>
+
+const canvas =
+document.getElementById("space");
+
+const ctx =
+canvas.getContext("2d");
+
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+
+window.addEventListener("resize",()=>{
+
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+
+});
+
+/* CAMERA */
+
+let camX = 0;
+let camY = 0;
+let zoom = 1;
+
+let targetCamX = 0;
+let targetCamY = 0;
+let targetZoom = 1;
+
+/* INFO */
+
+const panelName =
+document.getElementById("planetName");
+
+const panelInfo =
+document.getElementById("planetInfo");
+
+/* STARS */
+
+const stars = [];
+
+for(let i=0;i<2000;i++){
+
+    stars.push({
+
+        x:(Math.random()-0.5)*8000,
+        y:(Math.random()-0.5)*8000,
+        size:Math.random()*2
+
+    });
+
+}
+
+/* PLANETS */
+
+const planets = [
+
+{
+name:"Merkurius",
+color:"#9e9e9e",
+radius:80,
+size:6,
+speed:0.04,
+desc:"Planet terkecil dan paling dekat dengan Matahari."
+},
+
+{
+name:"Venus",
+color:"#d8a76d",
+radius:120,
+size:10,
+speed:0.032,
+desc:"Planet terpanas di tata surya."
+},
+
+{
+name:"Bumi",
+color:"deepskyblue",
+radius:180,
+size:11,
+speed:0.025,
+desc:"Planet tempat manusia tinggal."
+},
+
+{
+name:"Mars",
+color:"red",
+radius:240,
+size:8,
+speed:0.020,
+desc:"Planet merah yang memiliki gunung terbesar."
+},
+
+{
+name:"Jupiter",
+color:"#d2b48c",
+radius:330,
+size:24,
+speed:0.015,
+desc:"Planet terbesar di tata surya."
+},
+
+{
+name:"Saturnus",
+color:"#e1c16e",
+radius:430,
+size:20,
+speed:0.011,
+desc:"Planet dengan cincin paling terkenal."
+},
+
+{
+name:"Uranus",
+color:"lightblue",
+radius:530,
+size:17,
+speed:0.008,
+desc:"Planet es raksasa berwarna biru muda."
+},
+
+{
+name:"Neptunus",
+color:"blue",
+radius:650,
+size:17,
+speed:0.006,
+desc:"Planet paling jauh dari Matahari."
+}
+
+];
+
+/* CLICK */
+
+canvas.addEventListener("click",(e)=>{
+
+    const rect =
+    canvas.getBoundingClientRect();
+
+    const mx =
+    e.clientX - rect.left;
+
+    const my =
+    e.clientY - rect.top;
+
+    planets.forEach((planet)=>{
+
+        const dx =
+        mx - planet.screenX;
+
+        const dy =
+        my - planet.screenY;
+
+        const dist =
+        Math.sqrt(dx*dx + dy*dy);
+
+        if(dist < planet.size*zoom + 10){
+
+            targetCamX =
+            planet.worldX;
+
+            targetCamY =
+            planet.worldY;
+
+            targetZoom = 3;
+
+            panelName.innerHTML =
+            "🪐 " + planet.name;
+
+            panelInfo.innerHTML =
+            planet.desc;
+
+        }
+
+    });
+
+});
+
+/* RESET */
+
+function resetView(){
+
+    targetCamX = 0;
+    targetCamY = 0;
+    targetZoom = 1;
+
+    panelName.innerHTML =
+    "☀ Matahari";
+
+    panelInfo.innerHTML =
+    "Matahari adalah pusat tata surya.";
+
+}
+
+/* DRAW */
+
+function draw(){
+
+    ctx.fillStyle =
+    "rgba(0,0,0,0.25)";
+
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    /* Smooth camera */
+
+    camX +=
+    (targetCamX - camX)*0.05;
+
+    camY +=
+    (targetCamY - camY)*0.05;
+
+    zoom +=
+    (targetZoom - zoom)*0.05;
+
+    /* Draw stars */
+
+    stars.forEach((star)=>{
+
+        const sx =
+        (star.x - camX)*zoom +
+        canvas.width/2;
+
+        const sy =
+        (star.y - camY)*zoom +
+        canvas.height/2;
+
+        ctx.beginPath();
+
+        ctx.fillStyle = "white";
+
+        ctx.arc(
+            sx,
+            sy,
+            star.size,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+    });
+
+    /* SUN */
+
+    const sunX =
+    (0 - camX)*zoom +
+    canvas.width/2;
+
+    const sunY =
+    (0 - camY)*zoom +
+    canvas.height/2;
+
+    const glow =
+    ctx.createRadialGradient(
+        sunX,
+        sunY,
+        10,
+        sunX,
+        sunY,
+        120*zoom
+    );
+
+    glow.addColorStop(0,"yellow");
+    glow.addColorStop(0.4,"orange");
+    glow.addColorStop(1,"transparent");
+
+    ctx.fillStyle = glow;
+
+    ctx.beginPath();
+
+    ctx.arc(
+        sunX,
+        sunY,
+        120*zoom,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.beginPath();
+
+    ctx.fillStyle = "orange";
+
+    ctx.arc(
+        sunX,
+        sunY,
+        35*zoom,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    /* PLANETS */
+
+    planets.forEach((planet,index)=>{
+
+        const angle =
+        Date.now()*0.001*
+        planet.speed;
+
+        planet.worldX =
+        Math.cos(angle+index)*
+        planet.radius;
+
+        planet.worldY =
+        Math.sin(angle+index)*
+        planet.radius;
+
+        const px =
+        (planet.worldX - camX)*zoom +
+        canvas.width/2;
+
+        const py =
+        (planet.worldY - camY)*zoom +
+        canvas.height/2;
+
+        planet.screenX = px;
+        planet.screenY = py;
+
+        /* ORBIT */
+
+        ctx.beginPath();
+
+        ctx.strokeStyle =
+        "rgba(255,255,255,0.08)";
+
+        ctx.arc(
+            sunX,
+            sunY,
+            planet.radius*zoom,
+            0,
+            Math.PI*2
+        );
+
+        ctx.stroke();
+
+        /* PLANET */
+
+        ctx.beginPath();
+
+        ctx.fillStyle =
+        planet.color;
+
+        ctx.arc(
+            px,
+            py,
+            planet.size*zoom,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+        /* Saturn ring */
+
+        if(planet.name === "Saturnus"){
+
+            ctx.beginPath();
+
+            ctx.strokeStyle =
+            "#d6c28a";
+
+            ctx.ellipse(
+                px,
+                py,
+                30*zoom,
+                10*zoom,
+                0,
+                0,
+                Math.PI*2
+            );
+
+            ctx.stroke();
+
+        }
+
+    });
+
+    requestAnimationFrame(draw);
+
+}
+
+draw();
+
+</script>
+
+</body>
+</html>
