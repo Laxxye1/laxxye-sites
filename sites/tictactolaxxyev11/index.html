@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe 2 Pemain • Hitam Putih • Sistem Poin</title>
+    <style>
+        :root {
+            --bg: #000000;
+            --board-bg: #0a0a0a;
+            --cell-bg: #1a1a1a;
+            --cell-hover: #2a2a2a;
+            --cell-border: #ffffff;
+            --text: #ffffff;
+            --win-highlight: #ffffff;
+            --draw-color: #aaaaaa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Segoe UI', 'Poppins', system-ui, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            position: relative;
+        }
+
+        /* === PARTICLE BACKGROUND === */
+        .particles {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            animation: floatUp linear infinite;
+            opacity: 0;
+            background: rgba(255, 255, 255, 0.2);
+            width: 4px;
+            height: 4px;
+        }
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.8;
+            }
+            90% {
+                opacity: 0.1;
+            }
+            100% {
+                transform: translateY(-110vh) scale(2);
+                opacity: 0;
+            }
+        }
+
+        /* === MAIN CONTAINER === */
+        .main-container {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+        }
+
+        /* === PLAYER BADGES === */
+        .badge-wrapper {
+            position: fixed;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 22px;
+            border-radius: 16px;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            background: rgba(20, 20, 20, 0.85);
+            border: 2px solid #ffffff;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+            color: #ffffff;
+        }
+
+        /* Player 2 tetap di kiri atas */
+        .badge-player2 {
+            top: 20px;
+            left: 20px;
+            animation: badgePulse 3s ease-in-out infinite;
+        }
+
+        /* Player 1 dipindah ke KANAN ATAS dan DIPUTAR 180° agar teks terbalik */
+        .badge-player1-wrapper {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            transform: rotate(180deg);
+            /* Membalik seluruh badge, teks akan terlihat terbalik */
+        }
+        .badge-player1 {
+            animation: badgePulse 3s ease-in-out infinite;
+            /* Tidak perlu positioning fixed lagi karena wrapper yang handle */
+            position: static;
+        }
+
+        /* Active turn & winner state */
+        .badge-wrapper.active-turn {
+            border-color: #ffffff;
+            box-shadow: 0 0 35px rgba(255, 255, 255, 0.7);
+            animation: activeGlow 0.8s ease-in-out infinite;
+        }
+        .badge-wrapper.winner-badge {
+            animation: winnerCelebrate 0.5s ease-in-out infinite;
+            border-color: var(--win-highlight) !important;
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.9), 0 0 80px rgba(255, 255, 255, 0.7) !important;
+        }
+
+        @keyframes badgePulse {
+            0%,
+            100% {
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+            }
+            50% {
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
+            }
+        }
+        @keyframes activeGlow {
+            0%,
+            100% {
+                border-color: #ffffff;
+                box-shadow: 0 0 25px rgba(255, 255, 255, 0.5);
+            }
+            50% {
+                border-color: #ffffff;
+                box-shadow: 0 0 55px rgba(255, 255, 255, 0.9);
+            }
+        }
+        @keyframes winnerCelebrate {
+            0%,
+            100% {
+                transform: scale(1.06);
+            }
+            25% {
+                transform: scale(1.1) rotate(-2deg);
+            }
+            75% {
+                transform: scale(1.1) rotate(2deg);
+            }
+        }
+
+        .badge-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+            background: #ffffff;
+            color: #000000;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            transition: all 0.3s;
+        }
+
+        .badge-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .badge-name {
+            font-weight: 700;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #ffffff;
+        }
+        .badge-symbol {
+            font-weight: 900;
+            font-size: 1.2rem;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+        }
+        .badge-stats {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .badge-wins,
+        .badge-points {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .stat-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #aaa;
+        }
+        .stat-value {
+            font-weight: 700;
+            font-size: 1.4rem;
+            color: #fff;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+        }
+
+        /* === TITLE === */
+        .title {
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-align: center;
+            color: #fff;
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+            margin-top: 10px;
+        }
+
+        /* === STATUS BAR === */
+        .status-bar {
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: #ccc;
+            text-align: center;
+            min-height: 30px;
+            transition: all 0.3s;
+            padding: 6px 16px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .status-bar.win-status {
+            color: #ffffff;
+            font-weight: 800;
+            text-shadow: 0 0 15px #ffffff;
+            animation: statusGlow 0.6s ease-in-out infinite;
+        }
+        .status-bar.draw-status {
+            color: var(--draw-color);
+            font-weight: 700;
+        }
+        @keyframes statusGlow {
+            0%,
+            100% {
+                text-shadow: 0 0 10px #ffffff;
+            }
+            50% {
+                text-shadow: 0 0 30px #ffffff, 0 0 50px rgba(255, 255, 255, 0.8);
+            }
+        }
+
+        /* === BOARD === */
+        .board-wrapper {
+            position: relative;
+            background: var(--board-bg);
+            border-radius: 24px;
+            padding: 8px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), inset 0 0 0 2px rgba(255, 255, 255, 0.15);
+            border: 1px solid #333;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 6px;
+            width: min(320px, 75vw);
+            height: min(320px, 75vw);
+        }
+        .cell {
+            background: var(--cell-bg);
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            font-weight: 900;
+            transition: all 0.25s ease;
+            position: relative;
+            border: 3px solid #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
+        }
+        .cell:not(.taken):hover {
+            background: var(--cell-hover);
+            border-color: #ffffff;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.2), 0 0 20px rgba(255, 255, 255, 0.4);
+        }
+        .cell:not(.taken):active {
+            transform: scale(0.93);
+            transition: transform 0.1s;
+        }
+        .cell.taken {
+            cursor: not-allowed;
+            animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .cell.win-cell {
+            animation: winPulse 0.7s ease-in-out infinite;
+            border-color: #ffffff !important;
+            background: #222222 !important;
+            box-shadow: 0 0 35px rgba(255, 255, 255, 0.8), 0 0 70px rgba(255, 255, 255, 0.5) !important;
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+            60% {
+                transform: scale(1.15);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        @keyframes winPulse {
+            0%,
+            100% {
+                box-shadow: 0 0 35px rgba(255, 255, 255, 0.8), 0 0 70px rgba(255, 255, 255, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 55px rgba(255, 255, 255, 1), 0 0 100px rgba(255, 255, 255, 0.7);
+            }
+        }
+
+        /* === BUTTONS === */
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .btn {
+            padding: 12px 28px;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            color: #fff;
+        }
+        .btn-reset {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #ffffff;
+            backdrop-filter: blur(10px);
+        }
+        .btn-reset:hover {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+        .btn-new-game {
+            background: #ffffff;
+            color: #000000;
+            font-weight: 800;
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+        }
+        .btn-new-game:hover {
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.6);
+            transform: translateY(-3px);
+        }
+        .btn:active {
+            transform: scale(0.94);
+            transition: transform 0.1s;
+        }
+
+        /* Responsive */
+        @media (max-width: 500px) {
+            .badge-wrapper {
+                padding: 10px 16px;
+                gap: 8px;
+            }
+            .badge-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 1.1rem;
+            }
+            .badge-name {
+                font-size: 0.7rem;
+            }
+            .badge-symbol {
+                font-size: 1rem;
+            }
+            .stat-value {
+                font-size: 1.2rem;
+            }
+            .cell {
+                font-size: 2.8rem;
+                border-radius: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+
+    <!-- Player 2 (O) - pojok kiri atas -->
+    <div class="badge-wrapper badge-player2" id="badgePlayer2">
+        <div class="badge-icon">O</div>
+        <div class="badge-info">
+            <span class="badge-name">Player 2</span>
+            <span class="badge-symbol">O</span>
+        </div>
+        <div class="badge-stats">
+            <div class="badge-wins">
+                <span class="stat-label">Menang</span>
+                <span class="stat-value" id="winsPlayer2">0</span>
+            </div>
+            <div class="badge-points">
+                <span class="stat-label">Poin</span>
+                <span class="stat-value" id="pointsPlayer2">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Player 1 (X) - pojok kanan ATAS, wrapper diputar 180° -->
+    <div class="badge-player1-wrapper">
+        <div class="badge-wrapper badge-player1" id="badgePlayer1">
+            <div class="badge-icon">X</div>
+            <div class="badge-info">
+                <span class="badge-name">Player 1</span>
+                <span class="badge-symbol">X</span>
+            </div>
+            <div class="badge-stats">
+                <div class="badge-wins">
+                    <span class="stat-label">Menang</span>
+                    <span class="stat-value" id="winsPlayer1">0</span>
+                </div>
+                <div class="badge-points">
+                    <span class="stat-label">Poin</span>
+                    <span class="stat-value" id="pointsPlayer1">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <h1 class="title">TIC-TAC-TOE</h1>
+        <div class="status-bar" id="statusBar">Giliran Player 1 (X)</div>
+
+        <div class="board-wrapper">
+            <div class="board" id="board"></div>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn btn-reset" id="btnReset">Reset Papan</button>
+            <button class="btn btn-new-game" id="btnNewGame">Game Baru</button>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const boardEl = document.getElementById('board');
+            const statusBar = document.getElementById('statusBar');
+            const badgePlayer1 = document.getElementById('badgePlayer1');
+            const badgePlayer2 = document.getElementById('badgePlayer2');
+            const winsPlayer1El = document.getElementById('winsPlayer1');
+            const winsPlayer2El = document.getElementById('winsPlayer2');
+            const pointsPlayer1El = document.getElementById('pointsPlayer1');
+            const pointsPlayer2El = document.getElementById('pointsPlayer2');
+            const particlesContainer = document.getElementById('particles');
+
+            let board = Array(9).fill(null);
+            let currentPlayer = 'X'; // X = Player 1, O = Player 2
+            let gameActive = true;
+            let winCombo = null;
+
+            // Sistem poin baru
+            let totalWinsP1 = 0;
+            let totalWinsP2 = 0;
+            let pointsP1 = 0;
+            let pointsP2 = 0;
+            const MAX_POINTS = 3; // Game berakhir jika seseorang mencapai 3 poin
+            let matchOver = false; // Pertandingan selesai (poin maks tercapai)
+
+            const winPatterns = [
+                [0, 1, 2],
+                [3, 4, 5],
+                [6, 7, 8],
+                [0, 3, 6],
+                [1, 4, 7],
+                [2, 5, 8],
+                [0, 4, 8],
+                [2, 4, 6]
+            ];
+
+            function createParticles() {
+                const count = 40;
+                particlesContainer.innerHTML = '';
+                for (let i = 0; i < count; i++) {
+                    const particle = document.createElement('div');
+                    particle.classList.add('particle');
+                    const size = Math.random() * 5 + 2;
+                    particle.style.width = size + 'px';
+                    particle.style.height = size + 'px';
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.bottom = -10 + 'px';
+                    particle.style.animationDuration = (Math.random() * 15 + 10) + 's';
+                    particle.style.animationDelay = Math.random() * 10 + 's';
+                    particle.style.background = `rgba(255, 255, 255, ${Math.random() * 0.3 + 0.1})`;
+                    particlesContainer.appendChild(particle);
+                }
+            }
+            createParticles();
+
+            function renderBoard() {
+                boardEl.innerHTML = '';
+                board.forEach((mark, index) => {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.index = index;
+                    if (mark) {
+                        cell.textContent = mark;
+                        cell.classList.add('taken');
+                        cell.classList.add(mark === 'X' ? 'x-mark' : 'o-mark');
+                    }
+                    if (winCombo && winCombo.includes(index)) {
+                        cell.classList.add('win-cell');
+                    }
+                    cell.addEventListener('click', handleCellClick);
+                    boardEl.appendChild(cell);
+                });
+            }
+
+            function updatePointsAndCheckMatch() {
+                pointsP1 = Math.floor(totalWinsP1 / 3);
+                pointsP2 = Math.floor(totalWinsP2 / 3);
+                winsPlayer1El.textContent = totalWinsP1;
+                winsPlayer2El.textContent = totalWinsP2;
+                pointsPlayer1El.textContent = pointsP1;
+                pointsPlayer2El.textContent = pointsP2;
+
+                if (pointsP1 >= MAX_POINTS || pointsP2 >= MAX_POINTS) {
+                    matchOver = true;
+                    gameActive = false; // hentikan permainan papan
+                    const winner = pointsP1 >= MAX_POINTS ? 'Player 1 (X)' : 'Player 2 (O)';
+                    statusBar.textContent = `🏆 ${winner} memenangkan pertandingan! 🏆`;
+                    statusBar.className = 'status-bar win-status';
+                    // Highlight badge pemenang
+                    if (pointsP1 >= MAX_POINTS) {
+                        badgePlayer1.classList.add('winner-badge');
+                        badgePlayer2.classList.remove('winner-badge', 'active-turn');
+                    } else {
+                        badgePlayer2.classList.add('winner-badge');
+                        badgePlayer1.classList.remove('winner-badge', 'active-turn');
+                    }
+                    // Nonaktifkan interaksi sel
+                }
+            }
+
+            function updateUI() {
+                // Update poin dan cek match over
+                updatePointsAndCheckMatch();
+
+                if (matchOver) {
+                    // Status sudah diatur di updatePointsAndCheckMatch
+                    return;
+                }
+
+                // Update status bar
+                if (!gameActive && winCombo) {
+                    const winner = board[winCombo[0]];
+                    const playerName = winner === 'X' ? 'Player 1 (X)' : 'Player 2 (O)';
+                    statusBar.textContent = `${playerName} Menang Ronde ini! 🎉`;
+                    statusBar.className = 'status-bar win-status';
+                } else if (!gameActive && !winCombo) {
+                    statusBar.textContent = 'Ronde Seri! 🤝';
+                    statusBar.className = 'status-bar draw-status';
+                } else {
+                    const turnName = currentPlayer === 'X' ? 'Player 1 (X)' : 'Player 2 (O)';
+                    statusBar.textContent = `Giliran ${turnName}`;
+                    statusBar.className = 'status-bar';
+                }
+
+                // Badge active turn
+                badgePlayer1.classList.remove('active-turn', 'winner-badge');
+                badgePlayer2.classList.remove('active-turn', 'winner-badge');
+                if (gameActive) {
+                    if (currentPlayer === 'X') badgePlayer1.classList.add('active-turn');
+                    else badgePlayer2.classList.add('active-turn');
+                } else if (winCombo && !matchOver) {
+                    const winner = board[winCombo[0]];
+                    if (winner === 'X') badgePlayer1.classList.add('winner-badge');
+                    else badgePlayer2.classList.add('winner-badge');
+                }
+            }
+
+            function handleCellClick(e) {
+                const cell = e.currentTarget;
+                const index = parseInt(cell.dataset.index);
+
+                // Jangan izinkan klik jika permainan tidak aktif (papan selesai atau pertandingan usai)
+                if (!gameActive || matchOver || board[index]) return;
+
+                board[index] = currentPlayer;
+                renderBoard();
+
+                const winner = checkWinner();
+                if (winner) {
+                    gameActive = false;
+                    // Tambah total kemenangan
+                    if (winner === 'X') totalWinsP1++;
+                    else totalWinsP2++;
+                    updateUI();
+                    renderBoard();
+                    return;
+                }
+
+                if (board.every(cell => cell !== null)) {
+                    gameActive = false;
+                    winCombo = null;
+                    updateUI();
+                    return;
+                }
+
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                updateUI();
+            }
+
+            function checkWinner() {
+                for (const pattern of winPatterns) {
+                    const [a, b, c] = pattern;
+                    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                        winCombo = pattern;
+                        return board[a];
+                    }
+                }
+                return null;
+            }
+
+            function resetBoard() {
+                if (matchOver) {
+                    // Jika pertandingan sudah selesai, reset board tidak bisa dipakai sebelum game baru
+                    return;
+                }
+                board = Array(9).fill(null);
+                currentPlayer = 'X';
+                gameActive = true;
+                winCombo = null;
+                renderBoard();
+                updateUI();
+            }
+
+            function newGame() {
+                // Reset semua: papan, skor, poin, matchOver
+                board = Array(9).fill(null);
+                currentPlayer = 'X';
+                gameActive = true;
+                winCombo = null;
+                totalWinsP1 = 0;
+                totalWinsP2 = 0;
+                pointsP1 = 0;
+                pointsP2 = 0;
+                matchOver = false;
+                renderBoard();
+                updateUI();
+            }
+
+            document.getElementById('btnReset').addEventListener('click', resetBoard);
+            document.getElementById('btnNewGame').addEventListener('click', newGame);
+
+            // Inisialisasi
+            renderBoard();
+            updateUI();
+        })();
+    </script>
+</body>
+</html>
