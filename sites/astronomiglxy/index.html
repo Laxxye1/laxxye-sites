@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galaxy Simulation</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    background:black;
+    overflow-x:hidden;
+    color:white;
+}
+
+/* Background galaxy */
+.space{
+    position:fixed;
+    width:100%;
+    height:100%;
+    background:black;
+    overflow:hidden;
+    z-index:-5;
+}
+
+.star{
+    position:absolute;
+    width:2px;
+    height:2px;
+    background:white;
+    border-radius:50%;
+    animation:blink 2s infinite alternate;
+}
+
+@keyframes blink{
+    from{opacity:.2;}
+    to{opacity:1;}
+}
+
+/* Galaxy spiral */
+.galaxy{
+    position:absolute;
+    width:1400px;
+    height:1400px;
+    border-radius:50%;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    background:
+    radial-gradient(circle,
+    rgba(255,255,255,.2),
+    rgba(0,150,255,.05),
+    transparent 70%);
+    animation:spinGalaxy 120s linear infinite;
+    filter:blur(2px);
+}
+
+@keyframes spinGalaxy{
+    from{
+        transform:translate(-50%,-50%) rotate(0deg);
+    }
+    to{
+        transform:translate(-50%,-50%) rotate(360deg);
+    }
+}
+
+/* Container tata surya */
+.universe{
+    position:relative;
+    width:100%;
+    height:100vh;
+    overflow:hidden;
+}
+
+/* Matahari bergerak */
+.solar-system{
+    position:absolute;
+    width:900px;
+    height:900px;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    animation:travel 45s linear infinite;
+}
+
+/* Matahari */
+.sun{
+    position:absolute;
+    width:90px;
+    height:90px;
+    background:radial-gradient(circle,yellow,orange,red);
+    border-radius:50%;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    box-shadow:0 0 60px orange;
+}
+
+/* Orbit */
+.orbit{
+    position:absolute;
+    border:1px solid rgba(255,255,255,0.12);
+    border-radius:50%;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    animation:rotate linear infinite;
+}
+
+/* Rotasi planet */
+@keyframes rotate{
+    from{
+        transform:translate(-50%,-50%) rotate(0deg);
+    }
+    to{
+        transform:translate(-50%,-50%) rotate(360deg);
+    }
+}
+
+/* Matahari jalan */
+@keyframes travel{
+    0%{
+        transform:translate(-50%,-50%) translateX(-250px);
+    }
+
+    50%{
+        transform:translate(-50%,-50%) translateX(250px);
+    }
+
+    100%{
+        transform:translate(-50%,-50%) translateX(-250px);
+    }
+}
+
+/* Planet */
+.planet{
+    position:absolute;
+    border-radius:50%;
+    top:50%;
+    left:100%;
+    transform:translate(-50%,-50%);
+}
+
+/* Semua orbit */
+.mercury-orbit{
+    width:140px;
+    height:140px;
+    animation-duration:4s;
+}
+
+.venus-orbit{
+    width:190px;
+    height:190px;
+    animation-duration:7s;
+}
+
+.earth-orbit{
+    width:250px;
+    height:250px;
+    animation-duration:10s;
+}
+
+.mars-orbit{
+    width:320px;
+    height:320px;
+    animation-duration:14s;
+}
+
+.jupiter-orbit{
+    width:420px;
+    height:420px;
+    animation-duration:20s;
+}
+
+.saturn-orbit{
+    width:530px;
+    height:530px;
+    animation-duration:26s;
+}
+
+.uranus-orbit{
+    width:650px;
+    height:650px;
+    animation-duration:32s;
+}
+
+.neptune-orbit{
+    width:780px;
+    height:780px;
+    animation-duration:38s;
+}
+
+/* Warna planet */
+.mercury{
+    width:10px;
+    height:10px;
+    background:gray;
+}
+
+.venus{
+    width:16px;
+    height:16px;
+    background:#d6a76d;
+}
+
+.earth{
+    width:18px;
+    height:18px;
+    background:deepskyblue;
+}
+
+.mars{
+    width:14px;
+    height:14px;
+    background:red;
+}
+
+.jupiter{
+    width:32px;
+    height:32px;
+    background:#d2b48c;
+}
+
+.saturn{
+    width:28px;
+    height:28px;
+    background:#d8c58d;
+}
+
+.uranus{
+    width:22px;
+    height:22px;
+    background:lightblue;
+}
+
+.neptune{
+    width:22px;
+    height:22px;
+    background:blue;
+}
+
+/* Cincin saturn */
+.saturn::after{
+    content:'';
+    position:absolute;
+    width:42px;
+    height:8px;
+    border:2px solid #bfa76a;
+    border-radius:50%;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%) rotate(20deg);
+}
+
+/* Penjelasan */
+.info{
+    width:90%;
+    max-width:900px;
+    margin:auto;
+    margin-top:100px;
+    margin-bottom:100px;
+    text-align:center;
+    line-height:2;
+    padding:30px;
+    background:rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:20px;
+    backdrop-filter:blur(5px);
+}
+
+.info h1{
+    font-size:40px;
+    margin-bottom:20px;
+    color:cyan;
+    text-shadow:0 0 15px cyan;
+}
+
+.info p{
+    font-size:18px;
+    color:#ddd;
+}
+
+/* Mobile */
+@media(max-width:700px){
+
+    .solar-system{
+        transform:translate(-50%,-50%) scale(.55);
+    }
+
+    .info h1{
+        font-size:28px;
+    }
+
+    .info p{
+        font-size:15px;
+    }
+
+}
+
+</style>
+</head>
+<body>
+
+<div class="space">
+
+    <div class="galaxy"></div>
+
+    <script>
+        for(let i=0;i<300;i++){
+            const star=document.createElement("div");
+            star.classList.add("star");
+
+            star.style.left=Math.random()*100+"%";
+            star.style.top=Math.random()*100+"%";
+
+            star.style.animationDuration=
+            (Math.random()*3+1)+"s";
+
+            document.querySelector(".space")
+            .appendChild(star);
+        }
+    </script>
+
+</div>
+
+<section class="universe">
+
+    <div class="solar-system">
+
+        <div class="sun"></div>
+
+        <div class="orbit mercury-orbit">
+            <div class="planet mercury"></div>
+        </div>
+
+        <div class="orbit venus-orbit">
+            <div class="planet venus"></div>
+        </div>
+
+        <div class="orbit earth-orbit">
+            <div class="planet earth"></div>
+        </div>
+
+        <div class="orbit mars-orbit">
+            <div class="planet mars"></div>
+        </div>
+
+        <div class="orbit jupiter-orbit">
+            <div class="planet jupiter"></div>
+        </div>
+
+        <div class="orbit saturn-orbit">
+            <div class="planet saturn"></div>
+        </div>
+
+        <div class="orbit uranus-orbit">
+            <div class="planet uranus"></div>
+        </div>
+
+        <div class="orbit neptune-orbit">
+            <div class="planet neptune"></div>
+        </div>
+
+    </div>
+
+</section>
+
+<section class="info">
+
+    <h1>🌌 Perjalanan Tata Surya</h1>
+
+    <p>
+        Matahari tidak diam. Matahari bergerak
+        mengelilingi pusat galaksi Bima Sakti
+        dengan kecepatan sangat tinggi.
+    </p>
+
+    <p>
+        Saat Matahari bergerak,
+        seluruh planet ikut terbawa sambil
+        tetap mengelilingi Matahari.
+    </p>
+
+    <p>
+        Planet di tata surya terdiri dari
+        Merkurius, Venus, Bumi, Mars,
+        Jupiter, Saturnus, Uranus,
+        dan Neptunus.
+    </p>
+
+    <p>
+        Animasi ini menggambarkan bagaimana
+        Matahari membawa semua planet
+        bergerak melewati galaksi.
+    </p>
+
+</section>
+
+</body>
+</html>
