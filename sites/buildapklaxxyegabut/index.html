@@ -1,0 +1,121 @@
+export default function APKBuilderWeb() { const generateProject = () => { const appName = document.getElementById('appName').value || 'MyApp'; const packageName = document.getElementById('packageName').value || 'com.myapp.demo'; const websiteUrl = document.getElementById('websiteUrl').value || 'https://example.com';
+
+const projectText = `
+
+==================================== ANDROID WEBVIEW APP GENERATOR
+
+Nama APK : ${appName} Package  : ${packageName} Website  : ${websiteUrl}
+
+STEP BUILD APK:
+
+1. Install Android Studio
+
+
+2. Buat project baru
+
+
+3. Tambahkan WebView
+
+
+4. Masukkan URL website
+
+
+5. Build APK
+
+
+
+Contoh MainActivity.java:
+
+package ${packageName};
+
+import android.os.Bundle; import android.webkit.WebView; import android.webkit.WebViewClient; import androidx.appcompat.app.AppCompatActivity;
+
+public class MainActivity extends AppCompatActivity {
+
+WebView webView;
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+
+    webView = new WebView(this);
+    setContentView(webView);
+
+    webView.getSettings().setJavaScriptEnabled(true);
+    webView.setWebViewClient(new WebViewClient());
+    webView.loadUrl("${websiteUrl}");
+}
+
+} `;
+
+const blob = new Blob([projectText], { type: 'text/plain' });
+const link = document.createElement('a');
+link.href = URL.createObjectURL(blob);
+link.download = `${appName}_APK_Project.txt`;
+link.click();
+
+};
+
+return ( <div className="min-h-screen bg-black text-white flex items-center justify-center p-6 overflow-hidden relative"> <div className="absolute inset-0 opacity-20"> <div className="absolute w-72 h-72 bg-white rounded-full blur-3xl top-10 left-10 animate-pulse"></div> <div className="absolute w-72 h-72 bg-gray-500 rounded-full blur-3xl bottom-10 right-10 animate-pulse"></div> </div>
+
+<div className="relative z-10 w-full max-w-2xl bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl p-8">
+    <h1 className="text-5xl font-black text-center mb-2 tracking-wide">
+      APK BUILDER
+    </h1>
+
+    <p className="text-center text-gray-300 mb-8">
+      Buat project APK WebView aesthetic langsung dari website
+    </p>
+
+    <div className="space-y-5">
+      <div>
+        <label className="block mb-2 text-sm font-bold text-gray-300">
+          Nama APK
+        </label>
+        <input
+          id="appName"
+          type="text"
+          placeholder="Contoh: LaxxyeApp"
+          className="w-full p-4 rounded-2xl bg-black/50 border border-white/20 outline-none focus:border-white transition"
+        />
+      </div>
+
+      <div>
+        <label className="block mb-2 text-sm font-bold text-gray-300">
+          Package Name
+        </label>
+        <input
+          id="packageName"
+          type="text"
+          placeholder="com.laxxye.app"
+          className="w-full p-4 rounded-2xl bg-black/50 border border-white/20 outline-none focus:border-white transition"
+        />
+      </div>
+
+      <div>
+        <label className="block mb-2 text-sm font-bold text-gray-300">
+          URL Website
+        </label>
+        <input
+          id="websiteUrl"
+          type="text"
+          placeholder="https://example.com"
+          className="w-full p-4 rounded-2xl bg-black/50 border border-white/20 outline-none focus:border-white transition"
+        />
+      </div>
+
+      <button
+        onClick={generateProject}
+        className="w-full p-4 rounded-2xl bg-white text-black font-black text-lg hover:scale-105 transition duration-300 shadow-2xl"
+      >
+        GENERATE APK PROJECT
+      </button>
+    </div>
+
+    <div className="mt-8 border-t border-white/10 pt-6 text-sm text-gray-400 text-center">
+      Web ini membuat template project Android WebView yang bisa di-build menjadi APK.
+    </div>
+  </div>
+</div>
+
+); }
